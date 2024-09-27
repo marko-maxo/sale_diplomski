@@ -936,7 +936,7 @@ def populate_data():
 
 pick = int(
     input(
-        '1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4)Populate DWH first time\n555) Populate data\nPick: ')
+        '1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4) Populate DWH first time\n555) Populate data\nPick: ')
 )
 
 match pick:
