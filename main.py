@@ -39,7 +39,6 @@ def drop_prestage_currency():
 
 
 def populate_prestage_branch():
-
     drop_prestage_branch()
 
     branches_data = db_session.scalars(
@@ -59,7 +58,8 @@ def populate_prestage_branch():
             'date_closed': str(branch.date_closed),
         }
 
-        branch_hash = hashlib.md5(json.dumps(branch_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
+        branch_hash = hashlib.md5(
+            json.dumps(branch_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_branch = PreStageBranch()
         new_prestage_branch.name = branch_data['name']
@@ -76,7 +76,6 @@ def populate_prestage_branch():
 
 
 def populate_prestage_account():
-
     drop_prestage_account()
 
     accounts_data = db_session.scalars(
@@ -95,7 +94,8 @@ def populate_prestage_account():
             'customer_id': str(account.customer_id),  # int?
         }
 
-        account_hash = hashlib.md5(json.dumps(account_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
+        account_hash = hashlib.md5(
+            json.dumps(account_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_account = PreStageAccount()
         new_prestage_account.account_type = account_data['account_type']
@@ -111,7 +111,6 @@ def populate_prestage_account():
 
 
 def populate_prestage_currency():
-
     drop_prestage_currency()
 
     currencies_data = db_session.scalars(
@@ -129,7 +128,8 @@ def populate_prestage_currency():
             'exchange_to_base_currency': str(currency.exchange_to_base_currency),
         }
 
-        currency_hash = hashlib.md5(json.dumps(currency_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
+        currency_hash = hashlib.md5(
+            json.dumps(currency_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_currency = PreStageCurrency()
         new_prestage_currency.code = currency_data['code']
@@ -144,7 +144,6 @@ def populate_prestage_currency():
 
 
 def populate_prestage_customer():
-
     drop_prestage_customer()
 
     customers_data = db_session.scalars(
@@ -167,7 +166,8 @@ def populate_prestage_customer():
             'date_closed': str(customer.date_closed)
         }
 
-        customer_hash = hashlib.md5(json.dumps(customer_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
+        customer_hash = hashlib.md5(
+            json.dumps(customer_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_customer = PreStageCurrency()
         new_prestage_customer.first_name = customer_data['first_name']
@@ -187,7 +187,6 @@ def populate_prestage_customer():
 
 
 def populate_prestage_account_balance():
-
     drop_prestage_account_balance()
 
     accounts_balance_data = db_session.scalars(
@@ -207,11 +206,11 @@ def populate_prestage_account_balance():
 
     db_session.commit()
 
-    print(f'Commited prestage account_balance changes. Added {len(accounts_balance_data)} prestage account_balance rows.')
+    print(
+        f'Commited prestage account_balance changes. Added {len(accounts_balance_data)} prestage account_balance rows.')
 
 
 def populate_prestage_transaction():
-
     drop_prestage_transaction()
 
     transactions_data = db_session.scalars(
@@ -237,6 +236,8 @@ def populate_prestage_transaction():
     print(f'Commited prestage transaction changes. Added {len(transactions_data)} prestage transaction rows.')
 
 
+###
+
 def populate_prestage():
     populate_prestage_branch()
     populate_prestage_account()
@@ -246,4 +247,26 @@ def populate_prestage():
     populate_prestage_transaction()
 
 
-populate_prestage()
+def populate_stage():
+    pass
+
+
+def populate_dwh():
+    pass
+
+
+def populate_dwh_first_time():
+    pass
+
+
+pick = int(input('1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4)Populate DWH first time'))
+
+match pick:
+    case 1:
+        populate_prestage()
+    case 2:
+        populate_stage()
+    case 3:
+        populate_dwh()
+    case 4:
+        populate_dwh_first_time()
