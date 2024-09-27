@@ -393,6 +393,7 @@ def populate_stage_currency():
             new_stage_currency.currency_id = prestage_currency.currency_id
             new_stage_currency.code = prestage_currency.code
             new_stage_currency.name = prestage_currency.name
+            new_stage_currency.checksum = prestage_currency.checksum
             new_stage_currency.exchange_to_base_currency = prestage_currency.exchange_to_base_currency
             db_session.add(new_stage_currency)
             cnt += 1
@@ -430,6 +431,7 @@ def populate_stage_customer():
         if dwh_customer is None or (dwh_customer and dwh_customer.checksum != prestage_customer.checksum):
             new_stage_customer = StageCustomer()
             new_stage_customer.customer_id = prestage_customer.customer_id
+            new_stage_customer.checksum = prestage_customer.checksum
             new_stage_customer.first_name = prestage_customer.first_name
             new_stage_customer.last_name = prestage_customer.last_name
             new_stage_customer.gender = prestage_customer.gender
@@ -487,7 +489,7 @@ def populate_stage_transaction():
     for prestage_transaction in prestage_transaction_data:
         new_stage_transaction = StageTransaction()
         new_stage_transaction.transaction_id = prestage_transaction.transaction_id
-        new_stage_transaction.account_id = prestage_transaction.branch_id
+        new_stage_transaction.account_id = prestage_transaction.account_id
         new_stage_transaction.branch_id = prestage_transaction.branch_id
         new_stage_transaction.currency_id = prestage_transaction.currency_id
         new_stage_transaction.amount = prestage_transaction.amount
