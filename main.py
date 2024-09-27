@@ -309,7 +309,7 @@ def populate_stage_branch():
             new_stage_branch.city = prestage_branch.city
             new_stage_branch.date_created = prestage_branch.date_created
             new_stage_branch.date_closed = prestage_branch.date_closed
-            new_stage_branch.checksum = new_stage_branch.checksum
+            new_stage_branch.checksum = prestage_branch.checksum
             new_stage_branch.unid = prestage_branch.unid
             new_stage_branch.bus_date_from = prestage_branch.bus_date_from
             db_session.add(new_stage_branch)
