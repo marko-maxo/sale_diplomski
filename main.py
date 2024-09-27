@@ -43,6 +43,30 @@ def drop_prestage_currency():
     db_session.execute(delete(PreStageCurrency))
 
 
+def drop_database():
+    drop_prestage_branch()
+    drop_stage_branch()
+    drop_stage_account()
+    drop_prestage_account()
+    drop_stage_account_balance()
+    drop_prestage_account_balance()
+    drop_stage_currency()
+    drop_prestage_currency()
+    drop_stage_transaction()
+    drop_prestage_transaction()
+    drop_prestage_customer()
+    drop_stage_customer()
+
+    db_session.execute(delete(DWHTransaction))
+    db_session.execute(delete(DWHCurrency))
+    db_session.execute(delete(DWHCustomer))
+    db_session.execute(delete(DWHBranch))
+    db_session.execute(delete(DWHAccount))
+    db_session.execute(delete(DWHAccountBalance))
+
+    db_session.commit()
+
+
 def populate_prestage_branch():
     drop_prestage_branch()
 
@@ -522,7 +546,151 @@ def populate_stage():
 
 
 def populate_dwh():
-    pass
+
+    ##########
+    # BRANCHES DWH
+
+    stage_branch_data = db_session.scalars(select(StageBranch).order_by(StageBranch.id)).all()
+
+    for stage_branch in stage_branch_data:
+        dwh_branch = db_session.scalars(select(DWHBranch).where(DWHBranch.branch_id == stage_branch.branch_id, DWHBranch.bus_date_until == default_date)).first()
+        if dwh_branch:
+            dwh_branch.bus_date_until = stage_branch.bus_date_from
+        new_dwh_branch = DWHBranch()
+        new_dwh_branch.branch_id = stage_branch.branch_id
+        new_dwh_branch.name = stage_branch.name
+        new_dwh_branch.country = stage_branch.country
+        new_dwh_branch.city = stage_branch.city
+        new_dwh_branch.date_created = stage_branch.date_created
+        new_dwh_branch.status = 'active' if stage_branch.date_closed in [None, 'None'] else 'closed'
+        new_dwh_branch.checksum = stage_branch.checksum
+        new_dwh_branch.bus_date_from = stage_branch.bus_date_from
+        new_dwh_branch.unid = str(uuid.uuid4())
+        db_session.add(new_dwh_branch)
+    db_session.commit()
+
+    print(f'Commited DWH branch changes. Added {len(stage_branch_data)} DWH transaction rows.')
+
+    #########
+    # ACCOUNTS
+
+    stage_account_data = db_session.scalars(select(StageAccount).order_by(StageAccount.id)).all()
+
+    for stage_account in stage_account_data:
+        dwh_account = db_session.scalars(select(DWHAccount).where(DWHAccount.account_id == stage_account.account_id, DWHAccount.bus_date_until == default_date)).first()
+        if dwh_account:
+            dwh_account.bus_date_until = stage_account.bus_date_from
+        new_dwh_account = DWHAccount()
+        new_dwh_account.account_id = stage_account.account_id
+        new_dwh_account.account_type = stage_account.account_type
+        new_dwh_account.date_created = stage_account.date_created
+        new_dwh_account.status = stage_account.status
+        new_dwh_account.customer_id = stage_account.customer_id
+        new_dwh_account.checksum = stage_account.checksum
+        new_dwh_account.bus_date_from = stage_account.bus_date_from
+        new_dwh_account.unid = str(uuid.uuid4())
+        db_session.add(new_dwh_account)
+    db_session.commit()
+
+    print(f'Commited DWH account changes. Added {len(stage_account_data)} DWH account rows.')
+
+
+    ########
+    # CURRENCIES
+
+    stage_currency_data = db_session.scalars(select(StageCurrency).order_by(StageCurrency.id)).all()
+
+    for stage_currency in stage_currency_data:
+        dwh_currency = db_session.scalars(select(DWHCurrency).where(DWHCurrency.currency_id == stage_currency.currency_id, DWHCurrency.bus_date_until == default_date)).first()
+        if dwh_currency:
+            dwh_currency.bus_date_until = stage_currency.bus_date_from
+        new_dwh_currency = DWHCurrency()
+        new_dwh_currency.currency_id = stage_currency.currency_id
+        new_dwh_currency.code = stage_currency.code
+        new_dwh_currency.name = stage_currency.name
+        new_dwh_currency.exchange_to_base_currency = True if stage_currency.exchange_to_base_currency == 'True' else False
+        new_dwh_currency.checksum = stage_currency.checksum
+        new_dwh_currency.bus_date_from = stage_currency.bus_date_from
+        new_dwh_currency.unid = str(uuid.uuid4())
+        db_session.add(new_dwh_currency)
+    db_session.commit()
+
+    print(f'Commited DWH currency changes. Added {len(stage_currency_data)} DWH currency rows.')
+
+
+    #########
+    # CUSTOMERS
+
+    stage_customer_data = db_session.scalars(select(StageCustomer).order_by(StageCustomer.id)).all()
+
+    for stage_customer in stage_customer_data:
+        dwh_customer = db_session.scalars(select(DWHCustomer).where(DWHCustomer.customer_id == stage_customer.customer_id, DWHCustomer.bus_date_until == default_date)).first()
+        if dwh_customer:
+            dwh_customer.bus_date_until = stage_customer.bus_date_from
+        new_dwh_customer = DWHCustomer()
+        new_dwh_customer.customer_id = stage_customer.customer_id
+        new_dwh_customer.customer_name = stage_customer.first_name + ' ' + stage_customer.last_name
+        new_dwh_customer.gender = stage_customer.gender
+        new_dwh_customer.type = stage_customer.type
+        new_dwh_customer.city = stage_customer.city
+        new_dwh_customer.country = stage_customer.country
+        new_dwh_customer.date_created = stage_customer.date_created
+        new_dwh_customer.status = 'active' if stage_customer.date_closed in [None, 'None'] else 'closed'
+        new_dwh_customer.checksum = stage_customer.checksum
+        new_dwh_customer.bus_date_from = stage_customer.bus_date_from
+        new_dwh_customer.unid = str(uuid.uuid4())
+        db_session.add(new_dwh_customer)
+
+    db_session.commit()
+
+    print(f'Commited DWH customer changes. Added {len(stage_customer_data)} DWH customer rows.')
+
+
+    #########
+    # TRANSACTIONS
+
+    stage_transaction_data = db_session.scalars(select(StageTransaction).order_by(StageTransaction.id)).all()
+
+    for stage_transaction in stage_transaction_data:
+        new_dwh_transaction = DWHTransaction()
+        new_dwh_transaction.transaction_id = stage_transaction.transaction_id
+        new_dwh_transaction.account_id = stage_transaction.account_id
+        new_dwh_transaction.branch_id = stage_transaction.branch_id
+        new_dwh_transaction.currency_id = stage_transaction.currency_id
+        new_dwh_transaction.amount = stage_transaction.amount
+        new_dwh_transaction.success = True if stage_transaction.success == 'True' else False
+        new_dwh_transaction.date = stage_transaction.date
+        new_dwh_transaction.type = 'inflow' if float(stage_transaction.amount) > 0 else 'outflow'
+        new_dwh_transaction.posting_date = stage_transaction.posting_date
+        new_dwh_transaction.quality_identificator = 0
+        new_dwh_transaction.unid = str(uuid.uuid4())
+        db_session.add(new_dwh_transaction)
+
+    db_session.commit()
+
+    print(f'Commited DWH transaction changes. Added {len(stage_transaction_data)} DWH transaction rows.')
+
+
+    ##########
+    # ACCOUNT BALANCES
+
+    stage_account_balance_data = db_session.scalars(select(StageAccountBalance).order_by(StageAccountBalance.id)).all()
+
+    for stage_account_balance in stage_account_balance_data:
+        new_dwh_account_balance = DWHAccountBalance()
+        new_dwh_account_balance.account_balance_id = stage_account_balance.account_balance_id
+        new_dwh_account_balance.account_id = stage_account_balance.account_id
+        new_dwh_account_balance.currency_id = stage_account_balance.currency_id
+        new_dwh_account_balance.balance = stage_account_balance.balance
+        new_dwh_account_balance.account_balance_date = stage_account_balance.account_balance_date
+        new_dwh_account_balance.status = 'in debt' if float(stage_account_balance.balance) < 0 else 'ok'
+        new_dwh_account_balance.posting_date = stage_account_balance.posting_date
+        new_dwh_account_balance.quality_identificator = 0
+        new_dwh_account_balance.unid = str(uuid.uuid4())
+        db_session.add(new_dwh_account_balance)
+    db_session.commit()
+
+    print(f'Commited DWH account balance changes. Added {len(stage_account_balance_data)} DWH account balance rows.')
 
 
 def populate_dwh_first_time():
@@ -620,9 +788,9 @@ def populate_dwh_first_time():
                 continue
             if i.key == 'balance':
                 if float(getattr(pre_stage_account_balance, i.key)) < 0:
-                    setattr(dwh_account_balance, 'status', ' in debt')
+                    setattr(dwh_account_balance, 'status', 'in debt')
                 else:
-                    setattr(dwh_account_balance, 'status', ' ok')
+                    setattr(dwh_account_balance, 'status', 'ok')
                 setattr(dwh_account_balance, i.key, str(getattr(pre_stage_account_balance, i.key)))
             else:
                 setattr(dwh_account_balance, i.key, str(getattr(pre_stage_account_balance, i.key)))
@@ -657,6 +825,7 @@ def populate_dwh_first_time():
         db_session.add(dwh_transaction)
     db_session.commit()
     print("ADDED TRANSACTIONS")
+
 
 def populate_data():
     print("Dropping existing data")
@@ -943,19 +1112,6 @@ def populate_data():
     print("Data has been added")
 
 
-pick = int(
-    input(
-        '1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4) Populate DWH first time\n555) Populate data\nPick: ')
-)
-
-match pick:
-    case 1:
-        populate_prestage()
-    case 2:
-        populate_stage()
-    case 3:
-        populate_dwh()
-    case 4:
-        populate_dwh_first_time()
-    case 555:
-        populate_data()
+populate_prestage()
+populate_stage()
+populate_dwh()

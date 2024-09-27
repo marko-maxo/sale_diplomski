@@ -1,0 +1,22 @@
+# pick = int(
+#     input(
+#         '1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4) Populate DWH first time\n5) Populate data\n6) Drop database\n7) All\nPick: ')
+# )
+#
+# match pick:
+#     case 1:
+#         populate_prestage()
+#     case 2:
+#         populate_stage()
+#     case 3:
+#         populate_dwh()
+#     case 4:
+#         populate_dwh_first_time()
+#     case 5:
+#         populate_data()
+#     case 6:
+#         drop_database()
+#     case 7:
+#         populate_prestage()
+#         populate_stage()
+#         populate_dwh()
