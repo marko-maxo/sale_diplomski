@@ -25,6 +25,7 @@ class AccountBalance(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     account_id: Mapped[int] = mapped_column(ForeignKey("account.id"))
     currency_id: Mapped[int] = mapped_column(ForeignKey("currency.id"))
+    balance: Mapped[float] = mapped_column()
     account_balance_date: Mapped[datetime] = mapped_column()
 
     account: Mapped['Account'] = relationship()
@@ -47,6 +48,7 @@ class PreStageAccountBalance(Base, PreStageFactMixin):
     __tablename__ = "prestage_account_balance"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    account_id: Mapped[int] = mapped_column()
+    account_id: Mapped[str] = mapped_column()
     currency_id: Mapped[str] = mapped_column()
+    balance: Mapped[str] = mapped_column()
     account_balance_date: Mapped[str] = mapped_column()

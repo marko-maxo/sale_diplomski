@@ -1,8 +1,8 @@
-"""initial
+"""fact tables
 
-Revision ID: 8cf8871ac1ec
+Revision ID: e6b31c6ad093
 Revises: 
-Create Date: 2024-09-26 02:10:09.875621
+Create Date: 2024-09-27 11:26:51.566004
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '8cf8871ac1ec'
+revision: str = 'e6b31c6ad093'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -61,11 +61,11 @@ def upgrade() -> None:
     )
     op.create_table('prestage_account_balance',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('account_id', sa.String(), nullable=False),
+    sa.Column('account_id', sa.Integer(), nullable=False),
     sa.Column('currency_id', sa.String(), nullable=False),
-    sa.Column('checksum', sa.String(), nullable=False),
+    sa.Column('account_balance_date', sa.String(), nullable=False),
     sa.Column('unid', sa.Integer(), nullable=False),
-    sa.Column('bus_date_from', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('posting_date', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('prestage_branch',
@@ -113,9 +113,8 @@ def upgrade() -> None:
     sa.Column('amount', sa.String(), nullable=False),
     sa.Column('success', sa.String(), nullable=False),
     sa.Column('date', sa.String(), nullable=False),
-    sa.Column('checksum', sa.String(), nullable=False),
     sa.Column('unid', sa.Integer(), nullable=False),
-    sa.Column('bus_date_from', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('posting_date', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('account',
@@ -131,6 +130,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('account_id', sa.Integer(), nullable=False),
     sa.Column('currency_id', sa.Integer(), nullable=False),
+    sa.Column('account_balance_date', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['account_id'], ['account.id'], ),
     sa.ForeignKeyConstraint(['currency_id'], ['currency.id'], ),
     sa.PrimaryKeyConstraint('id')

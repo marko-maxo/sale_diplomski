@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from database import Base
-from .mixins import PreStageMixin
+from .fact_mixins import PreStageFactMixin
 
 
 class Transaction(Base):
@@ -23,7 +23,8 @@ class Transaction(Base):
 
 ###
 
-class PreStageTransaction(Base, PreStageMixin):
+
+class PreStageTransaction(Base, PreStageFactMixin):
     __tablename__ = "prestage_transaction"
 
     id: Mapped[int] = mapped_column(primary_key=True)
