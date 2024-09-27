@@ -1,20 +1,22 @@
 import json
 from typing import List
 from sqlalchemy import inspect
+from datetime import datetime
 from sqlalchemy import select, delete
 import random
 
 from models import (
-    Branch, PreStageBranch, DWHBranch,
-    Account, PreStageAccount, DWHAccount,
-    AccountBalance, PreStageAccountBalance, DWHAccountBalance,
-    Transaction, PreStageTransaction, DWHTransaction,
-    Customer, PreStageCustomer, DWHCustomer,
-    Currency, PreStageCurrency, DWHCurrency,
+    Branch, PreStageBranch, StageBranch, DWHBranch,
+    Account, PreStageAccount, StageAccount, DWHAccount,
+    AccountBalance, PreStageAccountBalance, StageAccountBalance, DWHAccountBalance,
+    Transaction, PreStageTransaction, StageTransaction, DWHTransaction,
+    Customer, PreStageCustomer, StageCustomer, DWHCustomer,
+    Currency, PreStageCurrency, StageCurrency, DWHCurrency
 )
 from database import Base, db_session
 import hashlib
 
+default_date = datetime(9999, 7, 1)
 
 
 def drop_prestage_branch():
@@ -248,8 +250,255 @@ def populate_prestage_transaction():
 
     print(f'Commited prestage transaction changes. Added {len(transactions_data)} prestage transaction rows.')
 
-
 ###
+
+def drop_stage_branch():
+    db_session.execute(delete(StageBranch))
+
+
+def drop_stage_account():
+    db_session.execute(delete(StageAccount))
+
+
+def drop_stage_transaction():
+    db_session.execute(delete(StageTransaction))
+
+
+def drop_stage_account_balance():
+    db_session.execute(delete(StageAccountBalance))
+
+
+def drop_stage_currency():
+    db_session.execute(delete(StageCurrency))
+
+
+def drop_stage_customer():
+    db_session.execute(delete(StageCustomer))
+
+
+def populate_stage_branch():
+
+    drop_stage_branch()
+
+    prestage_branch_data = db_session.scalars(
+        select(
+            PreStageBranch
+        ).order_by(
+            PreStageBranch.id
+        )
+    ).all()
+
+    cnt = 0
+
+    for prestage_branch in prestage_branch_data:
+
+        dwh_branch = db_session.scalars(
+            select(
+                DWHBranch
+            ).where(
+                DWHBranch.branch_id == prestage_branch.branch_id,
+                DWHBranch.bus_date_until == default_date
+            )
+        ).first()
+
+        if dwh_branch is None or (dwh_branch and dwh_branch.checksum != prestage_branch.checksum):
+            new_stage_branch = StageBranch()
+            new_stage_branch.branch_id = prestage_branch.branch_id
+            new_stage_branch.name = prestage_branch.name
+            new_stage_branch.country = prestage_branch.country
+            new_stage_branch.city = prestage_branch.city
+            new_stage_branch.date_created = prestage_branch.date_created
+            new_stage_branch.date_closed = prestage_branch.date_closed
+            new_stage_branch.checksum = new_stage_branch.checksum
+            new_stage_branch.unid = prestage_branch.unid
+            new_stage_branch.bus_date_from = prestage_branch.bus_date_from
+            db_session.add(new_stage_branch)
+            cnt += 1
+
+    db_session.commit()
+
+    print(f'Commited stage branch changes. Added {cnt} stage branch rows.')
+
+
+def populate_stage_account():
+
+    drop_stage_account()
+
+    prestage_account_data = db_session.scalars(
+        select(
+            PreStageAccount
+        ).order_by(
+            PreStageAccount.id
+        )
+    ).all()
+
+    cnt = 0
+
+    for prestage_account in prestage_account_data:
+
+        dwh_account = db_session.scalars(
+            select(
+                DWHAccount
+            ).where(
+                DWHAccount.account_id == prestage_account.account_id,
+                DWHAccount.bus_date_until == default_date
+            )
+        ).first()
+
+        if dwh_account is None or (dwh_account and dwh_account.checksum != prestage_account.checksum):
+            new_stage_account = StageAccount()
+            new_stage_account.account_id = prestage_account.account_id
+            new_stage_account.account_type = prestage_account.account_type
+            new_stage_account.date_created = prestage_account.date_created
+            new_stage_account.status = prestage_account.status
+            new_stage_account.customer_id = prestage_account.customer_id
+            new_stage_account.checksum = prestage_account.checksum
+            new_stage_account.unid = prestage_account.unid
+            new_stage_account.bus_date_from = prestage_account.bus_date_from
+            db_session.add(new_stage_account)
+            cnt += 1
+
+    db_session.commit()
+
+    print(f'Commited stage account changes. Added {cnt} stage account rows.')
+
+
+def populate_stage_currency():
+
+    drop_stage_currency()
+
+    prestage_currency_data = db_session.scalars(
+        select(
+            PreStageCurrency
+        ).order_by(
+            PreStageCurrency.id
+        )
+    ).all()
+
+    cnt = 0
+
+    for prestage_currency in prestage_currency_data:
+
+        dwh_currency = db_session.scalars(
+            select(
+                DWHCurrency
+            ).where(
+                DWHCurrency.currency_id == prestage_currency.currency_id,
+                DWHCurrency.bus_date_until == default_date
+            )
+        ).first()
+
+        if dwh_currency is None or (dwh_currency and dwh_currency.checksum != prestage_currency.checksum):
+            new_stage_currency = StageCurrency()
+            new_stage_currency.currency_id = prestage_currency.currency_id
+            new_stage_currency.code = prestage_currency.code
+            new_stage_currency.name = prestage_currency.name
+            new_stage_currency.exchange_to_base_currency = prestage_currency.exchange_to_base_currency
+            db_session.add(new_stage_currency)
+            cnt += 1
+
+    db_session.commit()
+
+    print(f'Commited stage currency changes. Added {cnt} stage currency rows.')
+
+
+def populate_stage_customer():
+
+    drop_stage_customer()
+
+    prestage_customer_data = db_session.scalars(
+        select(
+            PreStageCustomer
+        ).order_by(
+            PreStageCustomer.id
+        )
+    ).all()
+
+    cnt = 0
+
+    for prestage_customer in prestage_customer_data:
+
+        dwh_customer = db_session.scalars(
+            select(
+                DWHCustomer
+            ).where(
+                DWHCustomer.customer_id == prestage_customer.customer_id,
+                DWHCustomer.bus_date_until == default_date
+            )
+        ).first()
+
+        if dwh_customer is None or (dwh_customer and dwh_customer.checksum != prestage_customer.checksum):
+            new_stage_customer = StageCustomer()
+            new_stage_customer.customer_id = prestage_customer.customer_id
+            new_stage_customer.first_name = prestage_customer.first_name
+            new_stage_customer.last_name = prestage_customer.last_name
+            new_stage_customer.gender = prestage_customer.gender
+            new_stage_customer.city = prestage_customer.city
+            new_stage_customer.country = prestage_customer.country
+            new_stage_customer.type = prestage_customer.type
+            new_stage_customer.date_created = prestage_customer.date_created
+            new_stage_customer.date_closed = prestage_customer.date_closed
+            db_session.add(new_stage_customer)
+            cnt += 1
+
+    db_session.commit()
+
+    print(f'Commited stage customer changes. Added {cnt} stage customer rows.')
+
+
+def populate_stage_account_balance():
+
+    drop_prestage_account_balance()
+
+    prestage_account_balance_data = db_session.scalars(
+        select(
+            PreStageAccountBalance
+        ).order_by(
+            PreStageAccountBalance.id
+        )
+    ).all()
+
+    for prestage_account_balance in prestage_account_balance_data:
+        new_stage_account_balance = StageAccountBalance()
+        new_stage_account_balance.account_balance_id = prestage_account_balance.account_balance_id
+        new_stage_account_balance.account_id = prestage_account_balance.account_id
+        new_stage_account_balance.currency_id = prestage_account_balance.currency_id
+        new_stage_account_balance.balance = prestage_account_balance.balance
+        new_stage_account_balance.account_balance_date = prestage_account_balance.account_balance_date
+        db_session.add(new_stage_account_balance)
+
+    db_session.commit()
+
+    print(f'Commited stage account_balance changes. Added {len(prestage_account_balance_data)} stage account_balance rows.')
+
+
+def populate_stage_transaction():
+
+    drop_stage_transaction()
+
+    prestage_transaction_data = db_session.scalars(
+        select(
+            PreStageTransaction
+        ).order_by(
+            PreStageTransaction.id
+        )
+    ).all()
+
+    for prestage_transaction in prestage_transaction_data:
+        new_stage_transaction = StageTransaction()
+        new_stage_transaction.transaction_id = prestage_transaction.transaction_id
+        new_stage_transaction.account_id = prestage_transaction.branch_id
+        new_stage_transaction.branch_id = prestage_transaction.branch_id
+        new_stage_transaction.currency_id = prestage_transaction.currency_id
+        new_stage_transaction.amount = prestage_transaction.amount
+        new_stage_transaction.success = prestage_transaction.success
+        new_stage_transaction.date = prestage_transaction.date
+        db_session.add(new_stage_transaction)
+
+    db_session.commit()
+
+    print(f'Commited stage transaction changes. Added {len(prestage_transaction_data)} stage transaction rows.')
+
 
 def populate_prestage():
     populate_prestage_branch()
@@ -261,7 +510,12 @@ def populate_prestage():
 
 
 def populate_stage():
-    pass
+    populate_stage_branch()
+    populate_stage_account()
+    populate_stage_currency()
+    populate_stage_customer()
+    populate_stage_account_balance()
+    populate_stage_transaction()
 
 
 def populate_dwh():
