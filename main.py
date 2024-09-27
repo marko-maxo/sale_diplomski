@@ -1,6 +1,6 @@
 import json
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from models import (
     Branch, PreStageBranch,
@@ -14,17 +14,43 @@ from database import Base, db_session
 import hashlib
 
 
+def drop_prestage_branch():
+    db_session.execute(delete(PreStageBranch))
+
+
+def drop_prestage_account():
+    db_session.execute(delete(PreStageAccount))
+
+
+def drop_prestage_transaction():
+    db_session.execute(delete(PreStageTransaction))
+
+
+def drop_prestage_customer():
+    db_session.execute(delete(PreStageCustomer))
+
+
+def drop_prestage_account_balance():
+    db_session.execute(delete(AccountBalance))
+
+
+def drop_prestage_currency():
+    db_session.execute(delete(PreStageCurrency))
+
+
 def populate_prestage_branch():
-    branch_data = db_session.scalars(
+
+    drop_prestage_branch()
+
+    branches_data = db_session.scalars(
         select(
             Branch
         ).order_by(
             Branch.id
         )
     ).all()
-    branch_hashes_and_data = {}
-    branch_hashes = []
-    for branch in branch_data:
+
+    for branch in branches_data:
         branch_data = {
             'name': str(branch.name),
             'city': str(branch.city),
@@ -34,41 +60,190 @@ def populate_prestage_branch():
         }
 
         branch_hash = hashlib.md5(json.dumps(branch_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
-        branch_data['branch_data_hash'] = branch_hash
 
-        branch_hashes_and_data[branch_hash] = branch_data
-        branch_hashes.append(branch_hash)
-
-    prestage_hashes = db_session.scalars(
-        select(
-            PreStageBranch.checksum
-        ).where(
-            PreStageBranch.checksum.in_(branch_hashes)
-        )
-    ).all()
-
-    if prestage_hashes:
-        data_hashes_to_add = [
-            data_branch_hash for data_branch_hash in branch_hashes if data_branch_hash not in prestage_hashes
-        ]
-    else:
-        data_hashes_to_add = branch_hashes_and_data
-
-    for data_to_add_hash in data_hashes_to_add:
         new_prestage_branch = PreStageBranch()
-        new_prestage_branch.name = branch_hashes_and_data[data_to_add_hash]['name']
-        new_prestage_branch.city = branch_hashes_and_data[data_to_add_hash]['city']
-        new_prestage_branch.country = branch_hashes_and_data[data_to_add_hash]['country']
-        new_prestage_branch.date_created = branch_hashes_and_data[data_to_add_hash]['date_created']
-        new_prestage_branch.date_closed = branch_hashes_and_data[data_to_add_hash]['date_closed']
-        new_prestage_branch.checksum = branch_hashes_and_data[data_to_add_hash]['branch_data_hash']
+        new_prestage_branch.name = branch.name
+        new_prestage_branch.city = branch.city
+        new_prestage_branch.country = branch.country
+        new_prestage_branch.date_created = branch.date_created
+        new_prestage_branch.date_closed = branch.date_closed
+        new_prestage_branch.checksum = branch_hash
         db_session.add(new_prestage_branch)
 
     db_session.commit()
 
-    print(f'Commited prestage branch changes. Added {len(data_hashes_to_add)} prestage branches rows.')
+    print(f'Commited prestage branch changes. Added {len(branches_data)} prestage branches rows.')
+
+
+def populate_prestage_account():
+
+    drop_prestage_account()
+
+    accounts_data = db_session.scalars(
+        select(
+            Account
+        ).order_by(
+            Account.id
+        )
+    ).all()
+
+    for account in accounts_data:
+        account_data = {
+            'account_type': str(account.account_type),
+            'date_created': str(account.date_created),
+            'status': str(account.status),
+            'customer_id': str(account.customer_id),  # int?
+        }
+
+        account_hash = hashlib.md5(json.dumps(account_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
+
+        new_prestage_account = PreStageAccount()
+        new_prestage_account.account_type = account.account_type
+        new_prestage_account.date_created = account.date_created
+        new_prestage_account.status = account.status
+        new_prestage_account.customer_id = account.customer_id
+        new_prestage_account.checksum = account_hash
+        db_session.add(new_prestage_account)
+
+    db_session.commit()
+
+    print(f'Commited prestage account changes. Added {len(accounts_data)} prestage accounts rows.')
+
+
+def populate_prestage_currency():
+
+    drop_prestage_currency()
+
+    currencies_data = db_session.scalars(
+        select(
+            Currency
+        ).order_by(
+            Currency.id
+        )
+    ).all()
+
+    for currency in currencies_data:
+        currency_data = {
+            'code': str(currency.code),
+            'name': str(currency.name),
+            'exchange_to_base_currency': str(currency.exchange_to_base_currency),
+        }
+
+        currency_hash = hashlib.md5(json.dumps(currency_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
+
+        new_prestage_currency = PreStageCurrency()
+        new_prestage_currency.code = currency.code
+        new_prestage_currency.name = currency.name
+        new_prestage_currency.exchange_to_base_currency = currency.exchange_to_base_currency
+        new_prestage_currency.checksum = currency_hash
+        db_session.add(new_prestage_currency)
+
+    db_session.commit()
+
+    print(f'Commited prestage currency changes. Added {len(currencies_data)} prestage currency rows.')
+
+
+def populate_prestage_customer():
+
+    drop_prestage_customer()
+
+    customers_data = db_session.scalars(
+        select(
+            Customer
+        ).order_by(
+            Customer.id
+        )
+    ).all()
+
+    for customer in customers_data:
+        customer_data = {
+            'first_name': str(customer.first_name),
+            'last_name': str(customer.last_name),
+            'gender': str(customer.gender),
+            'city': str(customer.city),
+            'country': str(customer.country),
+            'type': str(customer.type),
+            'date_created': str(customer.date_created),
+            'date_closed': str(customer.date_closed)
+        }
+
+        customer_hash = hashlib.md5(json.dumps(customer_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
+
+        new_prestage_customer = PreStageCurrency()
+        new_prestage_customer.first_name = customer.first_name
+        new_prestage_customer.last_name = customer.last_name
+        new_prestage_customer.gender = customer.gender
+        new_prestage_customer.city = customer.city
+        new_prestage_customer.country = customer.country
+        new_prestage_customer.type = customer.type
+        new_prestage_customer.date_created = customer.date_created
+        new_prestage_customer.date_closed = customer.date_closed
+        new_prestage_customer.checksum = customer_hash
+        db_session.add(new_prestage_customer)
+
+    db_session.commit()
+
+    print(f'Commited prestage customer changes. Added {len(customers_data)} prestage customer rows.')
+
+
+def populate_prestage_account_balance():
+
+    drop_prestage_account_balance()
+
+    accounts_balance_data = db_session.scalars(
+        select(
+            AccountBalance
+        ).order_by(
+            AccountBalance.id
+        )
+    ).all()
+
+    for account_balance in accounts_balance_data:
+        new_prestage_account_balance = PreStageAccountBalance()
+        new_prestage_account_balance.account_id = account_balance.account_id
+        new_prestage_account_balance.currency_id = account_balance.currency_id
+        new_prestage_account_balance.account_balance_date = account_balance.account_balance_date
+        db_session.add(new_prestage_account_balance)
+
+    db_session.commit()
+
+    print(f'Commited prestage account_balance changes. Added {len(accounts_balance_data)} prestage account_balance rows.')
+
+
+def populate_prestage_transaction():
+
+    drop_prestage_transaction()
+
+    transactions_data = db_session.scalars(
+        select(
+            Transaction
+        ).order_by(
+            Transaction.id
+        )
+    ).all()
+
+    for transaction in transactions_data:
+        new_prestage_transaction = PreStageTransaction()
+        new_prestage_transaction.account_id = transaction.account_id
+        new_prestage_transaction.branch_id = transaction.branch_id
+        new_prestage_transaction.currency_id = transaction.currency_id
+        new_prestage_transaction.amount = transaction.amount
+        new_prestage_transaction.success = transaction.success
+        new_prestage_transaction.date = transaction.date
+        db_session.add(new_prestage_transaction)
+
+    db_session.commit()
+
+    print(f'Commited prestage transaction changes. Added {len(transactions_data)} prestage transaction rows.')
+
 
 def populate_prestage():
     populate_prestage_branch()
+    populate_prestage_account()
+    populate_prestage_currency()
+    populate_prestage_customer()
+    populate_prestage_account_balance()
+    populate_prestage_transaction()
+
 
 populate_prestage()

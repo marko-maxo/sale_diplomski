@@ -3,7 +3,9 @@ from datetime import datetime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from database import Base
+from .fact_mixins import PreStageFactMixin
 from .mixins import PreStageMixin
+
 
 class Account(Base):
     __tablename__ = "account"
@@ -15,6 +17,7 @@ class Account(Base):
     customer_id: Mapped[int] = mapped_column(ForeignKey("customer.id"))
 
     customer: Mapped['Customer'] = relationship()
+
 
 class AccountBalance(Base):
     __tablename__ = "account_balance"
@@ -29,6 +32,7 @@ class AccountBalance(Base):
 
 ###
 
+
 class PreStageAccount(Base, PreStageMixin):
     __tablename__ = "prestage_account"
 
@@ -38,10 +42,11 @@ class PreStageAccount(Base, PreStageMixin):
     status: Mapped[str] = mapped_column()
     customer_id: Mapped[str] = mapped_column()
 
-class PreStageAccountBalance(Base, PreStageMixin):
+
+class PreStageAccountBalance(Base, PreStageFactMixin):
     __tablename__ = "prestage_account_balance"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    account_id: Mapped[str] = mapped_column()
+    account_id: Mapped[int] = mapped_column()
     currency_id: Mapped[str] = mapped_column()
     account_balance_date: Mapped[str] = mapped_column()
