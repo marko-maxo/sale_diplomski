@@ -1,21 +1,20 @@
 import json
 from typing import List
-
+from sqlalchemy import inspect
 from sqlalchemy import select, delete
 import random
 
 from models import (
-    Branch, PreStageBranch,
-    Account, PreStageAccount,
-    AccountBalance, PreStageAccountBalance,
-    Transaction, PreStageTransaction,
-    Customer, PreStageCustomer,
-    Currency, PreStageCurrency,
+    Branch, PreStageBranch, DWHBranch,
+    Account, PreStageAccount, DWHAccount,
+    AccountBalance, PreStageAccountBalance, DWHAccountBalance,
+    Transaction, PreStageTransaction, DWHTransaction,
+    Customer, PreStageCustomer, DWHCustomer,
+    Currency, PreStageCurrency, DWHCurrency,
 )
 from database import Base, db_session
 import hashlib
 
-from models.branch import DWHBranch
 
 
 def drop_prestage_branch():
@@ -35,8 +34,7 @@ def drop_prestage_customer():
 
 
 def drop_prestage_account_balance():
-    db_session.execute(delete(AccountBalance))
-
+    db_session.execute(delete(PreStageAccountBalance))
 
 def drop_prestage_currency():
     db_session.execute(delete(PreStageCurrency))
@@ -60,6 +58,7 @@ def populate_prestage_branch():
             'country': str(branch.country),
             'date_created': str(branch.date_created),
             'date_closed': str(branch.date_closed),
+            'branch_id': str(branch.id)
         }
 
         branch_hash = hashlib.md5(
@@ -67,6 +66,7 @@ def populate_prestage_branch():
 
         new_prestage_branch = PreStageBranch()
         new_prestage_branch.name = branch_data['name']
+        new_prestage_branch.branch_id = branch_data['branch_id']
         new_prestage_branch.city = branch_data['city']
         new_prestage_branch.country = branch_data['country']
         new_prestage_branch.date_created = branch_data['date_created']
@@ -92,6 +92,7 @@ def populate_prestage_account():
 
     for account in accounts_data:
         account_data = {
+            'account_id': str(account.id),
             'account_type': str(account.account_type),
             'date_created': str(account.date_created),
             'status': str(account.status),
@@ -102,6 +103,7 @@ def populate_prestage_account():
             json.dumps(account_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_account = PreStageAccount()
+        new_prestage_account.account_id = account_data['account_id']
         new_prestage_account.account_type = account_data['account_type']
         new_prestage_account.date_created = account_data['date_created']
         new_prestage_account.status = account_data['status']
@@ -127,6 +129,7 @@ def populate_prestage_currency():
 
     for currency in currencies_data:
         currency_data = {
+            'currency_id': str(currency.id),
             'code': str(currency.code),
             'name': str(currency.name),
             'exchange_to_base_currency': str(currency.exchange_to_base_currency),
@@ -136,6 +139,7 @@ def populate_prestage_currency():
             json.dumps(currency_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_currency = PreStageCurrency()
+        new_prestage_currency.currency_id = currency_data['currency_id']
         new_prestage_currency.code = currency_data['code']
         new_prestage_currency.name = currency_data['name']
         new_prestage_currency.exchange_to_base_currency = currency_data['exchange_to_base_currency']
@@ -160,6 +164,7 @@ def populate_prestage_customer():
 
     for customer in customers_data:
         customer_data = {
+            'customer_id': str(customer.id),
             'first_name': str(customer.first_name),
             'last_name': str(customer.last_name),
             'gender': str(customer.gender),
@@ -173,7 +178,8 @@ def populate_prestage_customer():
         customer_hash = hashlib.md5(
             json.dumps(customer_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
-        new_prestage_customer = PreStageCurrency()
+        new_prestage_customer = PreStageCustomer()
+        new_prestage_customer.customer_id = customer_data['customer_id']
         new_prestage_customer.first_name = customer_data['first_name']
         new_prestage_customer.last_name = customer_data['last_name']
         new_prestage_customer.gender = customer_data['gender']
@@ -206,6 +212,8 @@ def populate_prestage_account_balance():
         new_prestage_account_balance.account_id = str(account_balance.account_id)
         new_prestage_account_balance.currency_id = str(account_balance.currency_id)
         new_prestage_account_balance.account_balance_date = str(account_balance.account_balance_date)
+        new_prestage_account_balance.account_balance_id = str(account_balance.id)
+        new_prestage_account_balance.balance = str(account_balance.balance)
         db_session.add(new_prestage_account_balance)
 
     db_session.commit()
@@ -233,6 +241,7 @@ def populate_prestage_transaction():
         new_prestage_transaction.amount = str(transaction.amount)
         new_prestage_transaction.success = str(transaction.success)
         new_prestage_transaction.date = str(transaction.date)
+        new_prestage_transaction.transaction_id = str(transaction.id)
         db_session.add(new_prestage_transaction)
 
     db_session.commit()
@@ -260,10 +269,131 @@ def populate_dwh():
 
 
 def populate_dwh_first_time():
-    prestage_branch: List[PreStageBranch] = db_session.scalars(select(PreStageBranch)).all()
-    for branch in prestage_branch:
-        dwh_branch = DWHBranch()
+    print("REMOVING OLD DWH")
+    db_session.execute(delete(DWHBranch))
+    db_session.execute(delete(DWHAccount))
+    db_session.execute(delete(DWHCurrency))
+    db_session.execute(delete(DWHCustomer))
+    db_session.execute(delete(DWHTransaction))
+    db_session.execute(delete(DWHAccountBalance))
 
+    print("ADDING INITIAL DWH")
+    ### BRANCHES
+    prestage_branches = db_session.scalars(select(PreStageBranch)).all()
+    for pre_stage_branch in prestage_branches:
+        dwh_branch = DWHBranch()
+        for i in inspect(pre_stage_branch).mapper.column_attrs:
+            if i.key == 'id':
+                continue
+            elif i.key == 'date_closed':
+                if getattr(pre_stage_branch, i.key) in [None, 'None']:
+                    setattr(dwh_branch, 'status', 'active')
+                else:
+                    setattr(dwh_branch, 'status', 'closed')
+            setattr(dwh_branch, i.key, str(getattr(pre_stage_branch, i.key)))
+        db_session.add(dwh_branch)
+    db_session.commit()
+    print("ADDED BRANCHES")
+    ###
+    ### CURRENCIES
+    prestage_currencies = db_session.scalars(select(PreStageCurrency)).all()
+    for pre_stage_currency in prestage_currencies:
+        dwh_currency = DWHCurrency()
+        for i in inspect(pre_stage_currency).mapper.column_attrs:
+            if i.key == 'id':
+                continue
+            elif i.key == 'exchange_to_base_currency':
+                if getattr(pre_stage_currency, i.key) in [None, 'False']:
+                    setattr(dwh_currency, i.key, False)
+                else:
+                    setattr(dwh_currency, i.key, True)
+            else:
+                setattr(dwh_currency, i.key, str(getattr(pre_stage_currency, i.key)))
+        db_session.add(dwh_currency)
+    db_session.commit()
+    print("ADDED CURRENCIES")
+    ###
+    ### CUSTOMERS
+    prestage_customers = db_session.scalars(select(PreStageCustomer)).all()
+    for pre_stage_customer in prestage_customers:
+        dwh_customer = DWHCustomer()
+        for i in inspect(pre_stage_customer).mapper.column_attrs:
+            if i.key == 'id':
+                continue
+            elif i.key == 'date_closed':
+                if getattr(pre_stage_customer, i.key) in [None, 'None']:
+                    setattr(dwh_customer, 'status', 'active')
+                else:
+                    setattr(dwh_customer, 'status', 'closed')
+                setattr(dwh_customer, i.key, str(getattr(pre_stage_customer, i.key)))
+            elif i.key in ['first_name', 'last_name']:
+                setattr(dwh_customer, 'customer_name', str(
+                    getattr(pre_stage_customer, i.key) + " " +
+                    str(getattr(dwh_customer, 'customer_name') if getattr(dwh_customer, 'customer_name') else "")
+                ))
+            else:
+                setattr(dwh_customer, i.key, str(getattr(pre_stage_customer, i.key)))
+        db_session.add(dwh_customer)
+    db_session.commit()
+    print("ADDED CUSTOMERS")
+    ###
+    ### ACCOUNTS
+    prestage_accounts = db_session.scalars(select(PreStageAccount)).all()
+    for pre_stage_account in prestage_accounts:
+        dwh_account = DWHAccount()
+        for i in inspect(pre_stage_account).mapper.column_attrs:
+            if i.key == 'id':
+                continue
+            else:
+                setattr(dwh_account, i.key, str(getattr(pre_stage_account, i.key)))
+        db_session.add(dwh_account)
+    db_session.commit()
+    print("ADDED ACCOUNTS")
+    ###
+    ### ACCOUNT BALANCES
+    prestage_account_balances = db_session.scalars(select(PreStageAccountBalance)).all()
+    for pre_stage_account_balance in prestage_account_balances:
+        dwh_account_balance = DWHAccountBalance()
+        for i in inspect(pre_stage_account_balance).mapper.column_attrs:
+            if i.key == 'id':
+                continue
+            if i.key == 'balance':
+                if float(getattr(pre_stage_account_balance, i.key)) < 0:
+                    setattr(dwh_account_balance, 'status', ' in debt')
+                else:
+                    setattr(dwh_account_balance, 'status', ' ok')
+                setattr(dwh_account_balance, i.key, str(getattr(pre_stage_account_balance, i.key)))
+            else:
+                setattr(dwh_account_balance, i.key, str(getattr(pre_stage_account_balance, i.key)))
+        setattr(dwh_account_balance, 'quality_identificator', 0)
+        db_session.add(dwh_account_balance)
+    db_session.commit()
+    print("ADDED ACCOUNT BALANCES")
+    ###
+    ### TRANSACTION
+    prestage_transactions = db_session.scalars(select(PreStageTransaction)).all()
+    for pre_stage_transaction in prestage_transactions:
+        dwh_transaction = DWHTransaction()
+        for i in inspect(pre_stage_transaction).mapper.column_attrs:
+            if i.key == 'id':
+                continue
+            elif i.key == 'amount':
+                if float(getattr(pre_stage_transaction, i.key)) > 0:
+                    setattr(dwh_transaction, 'type', 'inflow')
+                else:
+                    setattr(dwh_transaction, 'type', 'outflow')
+                setattr(dwh_transaction, i.key, str(getattr(pre_stage_transaction, i.key)))
+            elif i.key == 'success':
+                if getattr(pre_stage_transaction, i.key) in [None, 'False']:
+                    setattr(dwh_transaction, i.key, False)
+                else:
+                    setattr(dwh_transaction, i.key, True)
+            else:
+                setattr(dwh_transaction, i.key, str(getattr(pre_stage_transaction, i.key)))
+        setattr(dwh_transaction, 'quality_identificator', 0)
+        db_session.add(dwh_transaction)
+    db_session.commit()
+    print("ADDED TRANSACTIONS")
 
 def populate_data():
     print("Dropping existing data")
@@ -273,7 +403,7 @@ def populate_data():
     db_session.execute(delete(Account))
     db_session.execute(delete(Customer))
     db_session.execute(delete(Branch))
-    db_session.execute(delete(Customer))
+    db_session.execute(delete(Currency))
 
     print("Adding new data")
     customers = [
@@ -551,7 +681,8 @@ def populate_data():
 
 
 pick = int(
-    input('1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4)Populate DWH first time\n555) Populate data\nPick: ')
+    input(
+        '1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4)Populate DWH first time\n555) Populate data\nPick: ')
 )
 
 match pick:

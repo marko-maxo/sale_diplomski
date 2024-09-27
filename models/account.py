@@ -95,5 +95,5 @@ class DWHAccountBalance(Base, PreStageFactMixin, DWHFactMixin):
     account_id: Mapped[int] = mapped_column()
     currency_id: Mapped[int] = mapped_column()
     balance: Mapped[float] = mapped_column()
-    account_balance_date: Mapped[float] = mapped_column()
+    account_balance_date: Mapped[datetime] = mapped_column()
     status: Mapped[str] = mapped_column()  # balance < 0 -> in debt else ok
