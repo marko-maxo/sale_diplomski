@@ -62,11 +62,11 @@ def populate_prestage_branch():
         branch_hash = hashlib.md5(json.dumps(branch_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_branch = PreStageBranch()
-        new_prestage_branch.name = branch.name
-        new_prestage_branch.city = branch.city
-        new_prestage_branch.country = branch.country
-        new_prestage_branch.date_created = branch.date_created
-        new_prestage_branch.date_closed = branch.date_closed
+        new_prestage_branch.name = branch_data['name']
+        new_prestage_branch.city = branch_data['city']
+        new_prestage_branch.country = branch_data['country']
+        new_prestage_branch.date_created = branch_data['date_created']
+        new_prestage_branch.date_closed = branch_data['date_closed']
         new_prestage_branch.checksum = branch_hash
         db_session.add(new_prestage_branch)
 
@@ -98,10 +98,10 @@ def populate_prestage_account():
         account_hash = hashlib.md5(json.dumps(account_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_account = PreStageAccount()
-        new_prestage_account.account_type = account.account_type
-        new_prestage_account.date_created = account.date_created
-        new_prestage_account.status = account.status
-        new_prestage_account.customer_id = account.customer_id
+        new_prestage_account.account_type = account_data['account_type']
+        new_prestage_account.date_created = account_data['date_created']
+        new_prestage_account.status = account_data['status']
+        new_prestage_account.customer_id = account_data['customer_id']
         new_prestage_account.checksum = account_hash
         db_session.add(new_prestage_account)
 
@@ -132,9 +132,9 @@ def populate_prestage_currency():
         currency_hash = hashlib.md5(json.dumps(currency_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_currency = PreStageCurrency()
-        new_prestage_currency.code = currency.code
-        new_prestage_currency.name = currency.name
-        new_prestage_currency.exchange_to_base_currency = currency.exchange_to_base_currency
+        new_prestage_currency.code = currency_data['code']
+        new_prestage_currency.name = currency_data['name']
+        new_prestage_currency.exchange_to_base_currency = currency_data['exchange_to_base_currency']
         new_prestage_currency.checksum = currency_hash
         db_session.add(new_prestage_currency)
 
@@ -170,14 +170,14 @@ def populate_prestage_customer():
         customer_hash = hashlib.md5(json.dumps(customer_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest()
 
         new_prestage_customer = PreStageCurrency()
-        new_prestage_customer.first_name = customer.first_name
-        new_prestage_customer.last_name = customer.last_name
-        new_prestage_customer.gender = customer.gender
-        new_prestage_customer.city = customer.city
-        new_prestage_customer.country = customer.country
-        new_prestage_customer.type = customer.type
-        new_prestage_customer.date_created = customer.date_created
-        new_prestage_customer.date_closed = customer.date_closed
+        new_prestage_customer.first_name = customer_data['first_name']
+        new_prestage_customer.last_name = customer_data['last_name']
+        new_prestage_customer.gender = customer_data['gender']
+        new_prestage_customer.city = customer_data['city']
+        new_prestage_customer.country = customer_data['country']
+        new_prestage_customer.type = customer_data['type']
+        new_prestage_customer.date_created = customer_data['date_created']
+        new_prestage_customer.date_closed = customer_data['date_closed']
         new_prestage_customer.checksum = customer_hash
         db_session.add(new_prestage_customer)
 
@@ -200,9 +200,9 @@ def populate_prestage_account_balance():
 
     for account_balance in accounts_balance_data:
         new_prestage_account_balance = PreStageAccountBalance()
-        new_prestage_account_balance.account_id = account_balance.account_id
-        new_prestage_account_balance.currency_id = account_balance.currency_id
-        new_prestage_account_balance.account_balance_date = account_balance.account_balance_date
+        new_prestage_account_balance.account_id = str(account_balance.account_id)
+        new_prestage_account_balance.currency_id = str(account_balance.currency_id)
+        new_prestage_account_balance.account_balance_date = str(account_balance.account_balance_date)
         db_session.add(new_prestage_account_balance)
 
     db_session.commit()
@@ -224,12 +224,12 @@ def populate_prestage_transaction():
 
     for transaction in transactions_data:
         new_prestage_transaction = PreStageTransaction()
-        new_prestage_transaction.account_id = transaction.account_id
-        new_prestage_transaction.branch_id = transaction.branch_id
-        new_prestage_transaction.currency_id = transaction.currency_id
-        new_prestage_transaction.amount = transaction.amount
-        new_prestage_transaction.success = transaction.success
-        new_prestage_transaction.date = transaction.date
+        new_prestage_transaction.account_id = str(transaction.account_id)
+        new_prestage_transaction.branch_id = str(transaction.branch_id)
+        new_prestage_transaction.currency_id = str(transaction.currency_id)
+        new_prestage_transaction.amount = str(transaction.amount)
+        new_prestage_transaction.success = str(transaction.success)
+        new_prestage_transaction.date = str(transaction.date)
         db_session.add(new_prestage_transaction)
 
     db_session.commit()
