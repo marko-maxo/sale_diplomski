@@ -2,6 +2,7 @@ import json
 from typing import List
 
 from sqlalchemy import select, delete
+import random
 
 from models import (
     Branch, PreStageBranch,
@@ -264,8 +265,294 @@ def populate_dwh_first_time():
         dwh_branch = DWHBranch()
 
 
+def populate_data():
+    print("Dropping existing data")
 
-pick = int(input('1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4)Populate DWH first time'))
+    db_session.execute(delete(Transaction))
+    db_session.execute(delete(AccountBalance))
+    db_session.execute(delete(Account))
+    db_session.execute(delete(Customer))
+    db_session.execute(delete(Branch))
+    db_session.execute(delete(Customer))
+
+    print("Adding new data")
+    customers = [
+        {
+            "first_name": "Nikola",
+            "last_name": "Nikolic",
+            "gender": "M",
+            "city": "Belgrade",
+            "country": "Serbia",
+            "type": "fizicko_lice",
+            "date_created": "2021-02-20",
+        },
+        {
+            "first_name": "Ana",
+            "last_name": "Anic",
+            "gender": "F",
+            "city": "Nis",
+            "country": "Serbia",
+            "type": "fizicko_lice",
+            "date_created": "2022-02-20",
+        },
+        {
+            "first_name": "Luka",
+            "last_name": "Lukic",
+            "gender": "M",
+            "city": "Madrid",
+            "country": "Spain",
+            "type": "pravno_lice",
+            "date_created": "2023-12-20",
+        },
+        {
+            "first_name": "Bojana",
+            "last_name": "Bojanic",
+            "gender": "F",
+            "city": "Paris",
+            "country": "France",
+            "type": "pravno_lice",
+            "date_created": "2019-03-15",
+        },
+        {
+            "first_name": "Filip",
+            "last_name": "Filipovic",
+            "gender": "M",
+            "city": "Cacak",
+            "country": "Serbia",
+            "type": "fizicko_lice",
+            "date_created": "2022-11-13",
+        },
+    ]
+    currencies = [
+        {
+            "code": "USD",
+            "name": "Dollar",
+            "exchange_to_base_currency": True
+        },
+        {
+            "code": "RSD",
+            "name": "Dinar",
+            "exchange_to_base_currency": False
+        },
+        {
+            "code": "EUR",
+            "name": "Euro",
+            "exchange_to_base_currency": True
+        },
+    ]
+    branches = [
+        {
+            "name": "Filijala Beograd",
+            "country": "Serbia",
+            "city": "Belgrade",
+            "date_created": "2018-01-01",
+        },
+        {
+            "name": "Filijala Nis",
+            "country": "Serbia",
+            "city": "Nis",
+            "date_created": "2020-03-03",
+            "date_closed": "2023-03-01",
+        },
+        {
+            "name": "Filijala Madrid",
+            "country": "Spain",
+            "city": "Madrid",
+            "date_created": "2018-01-01",
+        },
+    ]
+    transactions = [
+        {
+            "account_id": None,
+            "branch_id": None,
+            "currency_id": None,
+            "amount": 100,
+            "success": True,
+            "date": "2018-01-01",
+        },
+        {
+            "account_id": None,
+            "branch_id": None,
+            "currency_id": None,
+            "amount": 12,
+            "success": True,
+            "date": "2019-01-01",
+        },
+        {
+            "account_id": None,
+            "branch_id": None,
+            "currency_id": None,
+            "amount": 230,
+            "success": True,
+            "date": "2024-09-27",
+        },
+        {
+            "account_id": None,
+            "branch_id": None,
+            "currency_id": None,
+            "amount": 5000,
+            "success": False,
+            "date": "2022-11-11",
+        },
+    ]
+    accounts = [
+        {
+            "customer_id": None,
+            "account_type": "stedni",
+            "date_created": "2021-10-11",
+            "status": "aktivan"
+        },
+        {
+            "customer_id": None,
+            "account_type": "tekuci",
+            "date_created": "2021-10-11",
+            "status": "aktivan"
+        },
+        {
+            "customer_id": None,
+            "account_type": "tekuci",
+            "date_created": "2021-10-11",
+            "date_closed": "2023-10-11",
+            "status": "zatvoren"
+        },
+        {
+            "customer_id": None,
+            "account_type": "stedni",
+            "date_created": "2022-10-13",
+            "status": "aktivan"
+        },
+    ]
+    account_balances = [
+        {
+            "account_id": None,
+            "currency_id": None,
+            "balance": 200,
+            "account_balance_date": "2021-10-11",
+        },
+        {
+            "account_id": None,
+            "currency_id": None,
+            "balance": 345,
+            "account_balance_date": "2022-03-11",
+        },
+        {
+            "account_id": None,
+            "currency_id": None,
+            "balance": 12,
+            "account_balance_date": "2022-11-11",
+        },
+        {
+            "account_id": None,
+            "currency_id": None,
+            "balance": 500,
+            "account_balance_date": "2024-09-27",
+        },
+    ]
+
+    ### Currencies
+    currencies_db = []
+    for c in currencies:
+        new_currency = Currency()
+        new_currency.code = c.get("code")
+        new_currency.name = c.get("name")
+        new_currency.exchange_to_base_currency = c.get("exchange_to_base_currency")
+
+        db_session.add(new_currency)
+        db_session.flush()
+        currencies_db.append(new_currency)
+    db_session.commit()
+    print("Added currencies")
+
+    ### Customers
+    customers_db = []
+    for c in customers:
+        new_customer = Customer()
+        new_customer.first_name = c.get("first_name")
+        new_customer.last_name = c.get("last_name")
+        new_customer.gender = c.get("gender")
+        new_customer.city = c.get("city")
+        new_customer.country = c.get("country")
+        new_customer.type = c.get("type")
+        new_customer.date_created = c.get("date_created")
+        new_customer.date_closed = c.get("date_closed")
+
+        db_session.add(new_customer)
+        db_session.flush()
+        customers_db.append(new_customer)
+    db_session.commit()
+    print("Added customers")
+
+    ### Branches
+    branches_db = []
+    for b in branches:
+        new_branch = Branch()
+        new_branch.name = b.get("name")
+        new_branch.city = b.get("city")
+        new_branch.country = b.get("country")
+        new_branch.date_created = b.get("date_created")
+        new_branch.date_closed = b.get("date_closed")
+
+        db_session.add(new_branch)
+        db_session.flush()
+        branches_db.append(new_branch)
+    db_session.commit()
+    print("Added branches")
+
+    ### Accounts
+    accounts_db = []
+    for a in accounts:
+        new_account = Account()
+        new_account.customer_id = random.choice(customers_db).id
+        new_account.account_type = a.get("account_type")
+        new_account.status = a.get("status")
+        new_account.date_created = a.get("date_created")
+
+        db_session.add(new_account)
+        db_session.flush()
+        accounts_db.append(new_account)
+    db_session.commit()
+    print("Added accounts")
+
+    ### Account balance
+    account_balances_db = []
+    for a in account_balances:
+        new_account_balance = AccountBalance()
+        new_account_balance.account_id = random.choice(accounts_db).id
+        new_account_balance.currency_id = random.choice(currencies_db).id
+        new_account_balance.balance = a.get("balance")
+        new_account_balance.account_balance_date = a.get("account_balance_date")
+
+        db_session.add(new_account_balance)
+        db_session.flush()
+        account_balances_db.append(new_account_balance)
+    db_session.commit()
+    print("Added account balances")
+
+    ### Transactions
+    transactions_db = []
+    for t in transactions:
+        new_transaction = Transaction()
+        new_transaction.account_id = random.choice(accounts_db).id
+        new_transaction.currency_id = random.choice(currencies_db).id
+        new_transaction.branch_id = random.choice(branches_db).id
+        new_transaction.amount = t.get("amount")
+        new_transaction.date = t.get("date")
+        new_transaction.success = t.get("success")
+
+        db_session.add(new_transaction)
+        db_session.flush()
+        transactions_db.append(new_transaction)
+    db_session.commit()
+    print("Added transactions")
+
+    ### DONE
+
+    print("Data has been added")
+
+
+pick = int(
+    input('1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4)Populate DWH first time\n555) Populate data\nPick: ')
+)
 
 match pick:
     case 1:
@@ -276,3 +563,5 @@ match pick:
         populate_dwh()
     case 4:
         populate_dwh_first_time()
+    case 555:
+        populate_data()
