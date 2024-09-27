@@ -4,6 +4,7 @@ from sqlalchemy import inspect
 from datetime import datetime
 from sqlalchemy import select, delete
 import random
+import uuid
 
 from models import (
     Branch, PreStageBranch, StageBranch, DWHBranch,
@@ -547,6 +548,7 @@ def populate_dwh_first_time():
                 else:
                     setattr(dwh_branch, 'status', 'closed')
             setattr(dwh_branch, i.key, str(getattr(pre_stage_branch, i.key)))
+        setattr(dwh_branch, 'unid', str(uuid.uuid4()))
         db_session.add(dwh_branch)
     db_session.commit()
     print("ADDED BRANCHES")
@@ -565,6 +567,7 @@ def populate_dwh_first_time():
                     setattr(dwh_currency, i.key, True)
             else:
                 setattr(dwh_currency, i.key, str(getattr(pre_stage_currency, i.key)))
+        setattr(dwh_currency, 'unid', str(uuid.uuid4()))
         db_session.add(dwh_currency)
     db_session.commit()
     print("ADDED CURRENCIES")
@@ -589,6 +592,7 @@ def populate_dwh_first_time():
                 ))
             else:
                 setattr(dwh_customer, i.key, str(getattr(pre_stage_customer, i.key)))
+        setattr(dwh_customer, 'unid', str(uuid.uuid4()))
         db_session.add(dwh_customer)
     db_session.commit()
     print("ADDED CUSTOMERS")
@@ -602,6 +606,7 @@ def populate_dwh_first_time():
                 continue
             else:
                 setattr(dwh_account, i.key, str(getattr(pre_stage_account, i.key)))
+        setattr(dwh_account, 'unid', str(uuid.uuid4()))
         db_session.add(dwh_account)
     db_session.commit()
     print("ADDED ACCOUNTS")
@@ -621,6 +626,7 @@ def populate_dwh_first_time():
                 setattr(dwh_account_balance, i.key, str(getattr(pre_stage_account_balance, i.key)))
             else:
                 setattr(dwh_account_balance, i.key, str(getattr(pre_stage_account_balance, i.key)))
+        setattr(dwh_account_balance, 'unid', str(uuid.uuid4()))
         setattr(dwh_account_balance, 'quality_identificator', 0)
         db_session.add(dwh_account_balance)
     db_session.commit()
@@ -646,6 +652,7 @@ def populate_dwh_first_time():
                     setattr(dwh_transaction, i.key, True)
             else:
                 setattr(dwh_transaction, i.key, str(getattr(pre_stage_transaction, i.key)))
+        setattr(dwh_transaction, 'unid', str(uuid.uuid4()))
         setattr(dwh_transaction, 'quality_identificator', 0)
         db_session.add(dwh_transaction)
     db_session.commit()
