@@ -13,7 +13,7 @@ from models import (
     Customer, PreStageCustomer, StageCustomer, DWHCustomer,
     Currency, PreStageCurrency, StageCurrency, DWHCurrency
 )
-from database import Base, db_session
+from database import db_session
 import hashlib
 
 default_date = datetime(9999, 7, 1)
@@ -450,7 +450,7 @@ def populate_stage_customer():
 
 def populate_stage_account_balance():
 
-    drop_prestage_account_balance()
+    drop_stage_account_balance()
 
     prestage_account_balance_data = db_session.scalars(
         select(
