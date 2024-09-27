@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from sqlalchemy import select, delete
 
@@ -12,6 +13,8 @@ from models import (
 )
 from database import Base, db_session
 import hashlib
+
+from models.branch import DWHBranch
 
 
 def drop_prestage_branch():
@@ -256,7 +259,10 @@ def populate_dwh():
 
 
 def populate_dwh_first_time():
-    pass
+    prestage_branch: List[PreStageBranch] = db_session.scalars(select(PreStageBranch)).all()
+    for branch in prestage_branch:
+        dwh_branch = DWHBranch()
+
 
 
 pick = int(input('1) Populate prestage\n2) Populate stage\n3) Populate DWH\n4)Populate DWH first time'))

@@ -1,9 +1,9 @@
 services:
-  aleksandar_urosevic_postgresql_db:
+  sale_db:
     image: postgres:16-alpine
     ports:
-      - 43221:5432
+      - 26571:5432
     environment:
-      - POSTGRES_PASSWORD=aleksandar_urosevic_pass
-      - POSTGRES_USER=aleksandar_urosevic_user
-      - POSTGRES_DB=aleksandar_urosevic_db
+      - POSTGRES_PASSWORD=sale_pass
+      - POSTGRES_USER=sale_user
+      - POSTGRES_DB=sale_db

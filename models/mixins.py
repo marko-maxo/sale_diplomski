@@ -12,5 +12,5 @@ class PreStageMixin:
 
 
 class DWHMixin:
-    quality_identificator: Mapped[int] = mapped_column()  # bice 0 ili 1; 0-dobro, 1-error
+    quality_identificator: Mapped[int] = mapped_column(default=0)  # bice 0 ili 1; 0-dobro, 1-error
     bus_date_until: Mapped[datetime] = mapped_column(server_default=text("'9999-07-01'::date"))

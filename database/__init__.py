@@ -3,11 +3,11 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 
 DB_ENGINE = 'postgresql'
-DB_USER = 'aleksandar_urosevic_user'
-DB_PASSWORD = 'aleksandar_urosevic_pass'
+DB_USER = 'sale_user'
+DB_PASSWORD = 'sale_pass'
 DB_HOST = 'localhost'
-DB_PORT = 43221
-DB_NAME = 'aleksandar_urosevic_db'
+DB_PORT = 26571
+DB_NAME = 'sale_db'
 
 db_url = f'{DB_ENGINE}+psycopg2://' \
          f'{DB_USER}:{DB_PASSWORD}' \
